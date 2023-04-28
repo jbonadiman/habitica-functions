@@ -67,6 +67,7 @@ func FinishFocusSession() error {
 
 		log.Println("ticking counter...")
 		count, err = redis.TickCounter(ctx)
+		log.Println("counter current value:", count)
 	}()
 
 	wg.Add(1)
