@@ -1,21 +1,14 @@
 package habitica_functions
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 
 	"habitica_functions/internal"
 )
 
-type request struct {
-	SingleTaskId string `json:"singleTaskId"`
-	SetTaskId    string `json:"setTaskId"`
-}
-
 func Handler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
+	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		_, _ = w.Write(
 			[]byte(fmt.Sprintf(
@@ -26,32 +19,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	defer func(body io.ReadCloser) {
-		err := body.Close()
-		if err != nil {
-			panic(err)
-		}
-	}(r.Body)
-
-	req := request{}
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write(
-			[]byte(fmt.Sprintf(
-				"error decoding request body: %v",
-				err,
-			)),
-		)
-		return
-	}
-
-	err = internal.FinishFocusSession(
-		&internal.PomodoroConfig{
-			SingleTaskID: req.SingleTaskId,
-			SetTaskID:    req.SetTaskId,
-		},
-	)
+	err := internal.FinishFocusSession()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write(
@@ -63,5 +31,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Add("Cache-Control", "s-maxage=3, stale-while-revalidate=59")
 	w.WriteHeader(http.StatusOK)
 }

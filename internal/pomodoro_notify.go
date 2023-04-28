@@ -12,18 +12,23 @@ import (
 
 const PomodoroSessionSize = 4
 
-type PomodoroConfig struct {
-	SingleTaskID string
-	SetTaskID    string
-}
-
 var (
-	redis       *services.UpstashDB
-	habiticaApi *services.Habitica
+	redis        *services.UpstashDB
+	habiticaApi  *services.Habitica
+	singleTaskId string
+	setTaskId    string
 )
 
 func initialize(ctx context.Context) {
 	log.SetFlags(log.Ldate | log.Lmicroseconds | log.Lshortfile)
+
+	if singleTaskId == "" {
+		singleTaskId = strings.TrimSpace(os.Getenv("HABITICA_POMODORO_TASK_ID"))
+	}
+
+	if setTaskId == "" {
+		setTaskId = strings.TrimSpace(os.Getenv("HABITICA_POMODORO_SET_TASK_ID"))
+	}
 
 	if redis == nil {
 		redis = services.NewRedisClient(
@@ -48,7 +53,7 @@ func initialize(ctx context.Context) {
 	}
 }
 
-func FinishFocusSession(config *PomodoroConfig) error {
+func FinishFocusSession() error {
 	ctx := context.Background()
 
 	initialize(ctx)
@@ -69,7 +74,7 @@ func FinishFocusSession(config *PomodoroConfig) error {
 		defer wg.Done()
 
 		log.Println("scoring the single task...")
-		err = habiticaApi.ScoreTask(config.SingleTaskID)
+		err = habiticaApi.ScoreTask(singleTaskId)
 	}()
 
 	wg.Wait()
@@ -85,7 +90,7 @@ func FinishFocusSession(config *PomodoroConfig) error {
 			defer wg.Done()
 
 			log.Println("scoring the set task...")
-			err = habiticaApi.ScoreTask(config.SetTaskID)
+			err = habiticaApi.ScoreTask(setTaskId)
 		}()
 
 		wg.Add(1)
