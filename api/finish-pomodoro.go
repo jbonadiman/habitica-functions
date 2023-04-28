@@ -1,4 +1,4 @@
-package internal
+package habitica_functions
 
 import (
 	"encoding/json"
