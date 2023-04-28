@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -30,10 +31,6 @@ func NewRedisClient(ctx context.Context, url string) *UpstashDB {
 	return &UpstashDB{client}
 }
 
-func (r *UpstashDB) Close() error {
-	return r.Close()
-}
-
 func (r *UpstashDB) TickCounter(ctx context.Context) (int, error) {
 	count, err := r.Incr(ctx, counterKey).Result()
 	if err != nil {
@@ -42,7 +39,7 @@ func (r *UpstashDB) TickCounter(ctx context.Context) (int, error) {
 
 	if count == 1 {
 		year, month, day := time.Now().Add(24 * time.Hour).Date()
-		r.ExpireAt(
+		resp, err := r.ExpireAt(
 			ctx, counterKey, time.Date(
 				day,
 				month,
@@ -53,7 +50,13 @@ func (r *UpstashDB) TickCounter(ctx context.Context) (int, error) {
 				0,
 				time.UTC,
 			),
-		).Val()
+		).Result()
+		if err != nil {
+			return 0, err
+		}
+		if !resp {
+			return 0, errors.New("failed to set expiration")
+		}
 	}
 
 	return int(count), nil
