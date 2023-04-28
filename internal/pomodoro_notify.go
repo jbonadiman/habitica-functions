@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"log"
 	"os"
 	"strings"
 	"sync"
@@ -22,11 +23,15 @@ var (
 )
 
 func initialize(ctx context.Context) {
+	log.SetFlags(log.Ldate | log.Lmicroseconds | log.Lshortfile)
+
 	if redis == nil {
 		redis = services.NewRedisClient(
 			ctx,
 			strings.TrimSpace(os.Getenv("REDIS_URL")),
 		)
+
+		log.Println("redis client created")
 	}
 
 	if habiticaApi == nil {
@@ -38,6 +43,8 @@ func initialize(ctx context.Context) {
 				ClientId: strings.TrimSpace(os.Getenv("HABITICA_CLIENT_ID")),
 			},
 		)
+
+		log.Println("habitica client created")
 	}
 }
 
@@ -52,12 +59,16 @@ func FinishFocusSession(config *PomodoroConfig) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+
+		log.Println("ticking counter...")
 		count, err = redis.TickCounter(ctx)
 	}()
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+
+		log.Println("scoring the single task...")
 		err = habiticaApi.ScoreTask(config.SingleTaskID)
 	}()
 
@@ -67,13 +78,21 @@ func FinishFocusSession(config *PomodoroConfig) error {
 	}
 
 	if count == PomodoroSessionSize {
+		log.Println("pomodoro session finished")
+
 		wg.Add(1)
 		go func() {
+			defer wg.Done()
+
+			log.Println("scoring the set task...")
 			err = habiticaApi.ScoreTask(config.SetTaskID)
 		}()
 
 		wg.Add(1)
 		go func() {
+			defer wg.Done()
+
+			log.Println("resetting counter...")
 			err = redis.ResetCounter(ctx)
 		}()
 
