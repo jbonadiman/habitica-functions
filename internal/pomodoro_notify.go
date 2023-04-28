@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"habitica-functions/internal/services"
+	"habitica_functions/internal/services"
 )
 
 const PomodoroSessionSize = 4

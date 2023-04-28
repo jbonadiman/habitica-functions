@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"habitica-functions/internal"
+	"habitica_functions/internal"
 )
 
 type request struct {
