@@ -40,18 +40,10 @@ func (r *UpstashDB) TickCounter(ctx context.Context) (int, error) {
 
 	if count == 1 {
 		year, month, day := time.Now().UTC().Add(24 * time.Hour).Date()
-		resp, err := r.ExpireAt(
-			ctx, counterKey, time.Date(
-				day,
-				month,
-				year,
-				0,
-				0,
-				0,
-				0,
-				time.UTC,
-			),
-		).Result()
+		date := time.Date(year, month, day, 0, 0, 0, 0, time.UTC)
+		log.Println("setting expiration to:", date)
+
+		resp, err := r.ExpireAt(ctx, counterKey, date).Result()
 		if err != nil {
 			return 0, err
 		}
