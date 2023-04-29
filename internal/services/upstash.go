@@ -41,7 +41,12 @@ func (r *UpstashDB) TickCounter(ctx context.Context) (int, error) {
 	if count == 1 {
 		year, month, day := time.Now().UTC().Add(24 * time.Hour).Date()
 		date := time.Date(year, month, day, 0, 0, 0, 0, time.UTC)
-		log.Println("setting expiration to:", date)
+		log.Println(
+			"setting expiration to:",
+			date,
+			"\nepoch set to:",
+			date.Unix(),
+		)
 
 		resp, err := r.ExpireAt(ctx, counterKey, date).Result()
 		if err != nil {
