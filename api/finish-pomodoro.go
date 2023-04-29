@@ -9,7 +9,10 @@ import (
 )
 
 func Handler(w http.ResponseWriter, r *http.Request) {
-	middlewares.Auth(w, r)
+	err := middlewares.Auth(w, r)
+	if err != nil {
+		return
+	}
 
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -22,7 +25,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := internal.FinishFocusSession()
+	err = internal.FinishFocusSession()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write(
