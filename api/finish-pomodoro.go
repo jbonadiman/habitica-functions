@@ -5,9 +5,12 @@ import (
 	"net/http"
 
 	"habitica_functions/internal"
+	"habitica_functions/internal/middlewares"
 )
 
 func Handler(w http.ResponseWriter, r *http.Request) {
+	middlewares.Auth(w, r)
+
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		_, _ = w.Write(
