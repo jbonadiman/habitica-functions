@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -38,7 +39,7 @@ func (r *UpstashDB) TickCounter(ctx context.Context) (int, error) {
 	}
 
 	if count == 1 {
-		year, month, day := time.Now().Add(24 * time.Hour).Date()
+		year, month, day := time.Now().UTC().Add(24 * time.Hour).Date()
 		resp, err := r.ExpireAt(
 			ctx, counterKey, time.Date(
 				day,
@@ -54,6 +55,8 @@ func (r *UpstashDB) TickCounter(ctx context.Context) (int, error) {
 		if err != nil {
 			return 0, err
 		}
+
+		log.Println("expiration set:", resp)
 		if !resp {
 			return 0, errors.New("failed to set expiration")
 		}
