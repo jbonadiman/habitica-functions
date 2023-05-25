@@ -33,23 +33,33 @@ func NewHabiticaClient(config *HabiticaConfig) *Habitica {
 	}
 }
 
-func (h *Habitica) ScoreTask(taskIdAlias string) error {
+func (h *Habitica) createRequest(method, url string) (*http.Request, error) {
 	req, err := http.NewRequest(
-		"POST",
-		fmt.Sprintf(
-			"%s/tasks/%s/score/up",
-			h.Host,
-			taskIdAlias,
-		),
+		method,
+		url,
 		nil,
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	req.Header.Add("x-api-user", h.authorId)
 	req.Header.Add("x-api-key", h.apiToken)
 	req.Header.Add("x-client", h.ClientId)
+
+	return req, nil
+}
+
+func (h *Habitica) ScoreTask(taskIdAlias string) error {
+	req, err := h.createRequest("POST",
+		fmt.Sprintf(
+			"%s/tasks/%s/score/up",
+			h.Host,
+			taskIdAlias,
+		))
+	if err != nil {
+		return err
+	}
 
 	response, err := http.DefaultClient.Do(req)
 	if err != nil {
