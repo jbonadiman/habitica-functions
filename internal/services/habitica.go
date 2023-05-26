@@ -24,6 +24,7 @@ type Task struct {
 
 type HabiticaService interface {
 	ScoreTask(taskIdAlias string) error
+	GetTask(taskIdAlias string) (Task, error)
 }
 
 type HabiticaConfig struct {
