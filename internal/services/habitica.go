@@ -8,12 +8,18 @@ import (
 	"time"
 )
 
+type HabiticaResponse struct {
+	Data json.RawMessage `json:"data"`
+}
+
 type Task struct {
 	Id        string    `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
-	Down      bool      `json:"down"`
-	Up        bool      `json:"up"`
+	Text      string    `json:"text"`
+	Value     float64   `json:"value"`
+	HasDown   bool      `json:"down"`
+	HasUp     bool      `json:"up"`
 }
 
 type HabiticaService interface {
@@ -93,9 +99,13 @@ func (h *Habitica) GetTask(taskIdAlias string) (Task, error) {
 		return Task{}, err
 	}
 
+	var habiticaResponse HabiticaResponse
+	if err := json.Unmarshal(data, &habiticaResponse); err != nil {
+		return Task{}, err
+	}
+
 	var task Task
-	err = json.Unmarshal(data, &task)
-	if err != nil {
+	if err := json.Unmarshal(habiticaResponse.Data, &task); err != nil {
 		return Task{}, err
 	}
 
